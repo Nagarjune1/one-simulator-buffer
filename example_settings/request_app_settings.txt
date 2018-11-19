@@ -1,0 +1,11 @@
+# Define new application
+RequestApp.type = RequestApplication
+RequestApp.interval = 1000
+RequestApp.destinationRange = 0,125
+RequestApp.requestSize = 5
+RequestApp.passive = false
+
+# Set Request app for all nodes
+Group.nrofApplications = 1
+Group.application1 = RequestApp
+Group.router = ReqResRouter

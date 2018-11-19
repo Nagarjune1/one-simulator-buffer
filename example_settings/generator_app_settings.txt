@@ -1,0 +1,11 @@
+# This configuration file adds Generator application for all the nodes
+
+# Define new application
+generatorApp.type = GeneratorApplication
+generatorApp.interval = 1000
+generatorApp.passive = false
+
+# Set Generator app for all nodes
+Group1.nrofApplications = 1
+Group1.application1 = generatorApp
+Group1.router = ReqResRouter
