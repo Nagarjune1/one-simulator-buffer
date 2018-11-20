@@ -2,8 +2,7 @@
 
 The Opportunistic Network Environment simulator.
 
-University College London
-3rd Year Project
+University College London 3rd Year Project
 
 Title: Buffer Management Strategies in Opportunistic Device-to-Device Networks
 
