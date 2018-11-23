@@ -45,7 +45,7 @@ public class MessageContentReport extends Report implements UpdateListener {
 
 		for (DTNHost h : hosts) {
 			Collection<Message> tmp = h.getMessageCollection();
-            output += (tmp + "\n");
+			output += tmp + "\n";
 		}
 		write(output);
 	}

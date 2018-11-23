@@ -113,7 +113,7 @@ MapBasedMovement.mapFile4 = data/shops.wkt
 
 ## Reports - all report names have to be valid report classes
 # how many reports to load
-Report.nrofReports = 7
+Report.nrofReports = 4
 # length of the warm up period (simulated seconds)
 Report.warmup = 0
 # default directory of reports (can be overridden per Report with output setting)
@@ -121,13 +121,10 @@ Report.reportDir = reports/
 # find out what is granularity
 Report.granularity = 1
 # Report classes to load
-Report.report1 = MessageDeliveryReport
-Report.report2 = MessageStatsReport
-Report.report3 = MessageReport
-Report.report4 = MessageContentReport
-Report.report5 = CreatedMessagesReport
-Report.report6 = DeliveredMessagesReport
-Report.report7 = ReqResReport
+Report.report1 = MessageContentReport
+Report.report2 = CreatedMessagesReport
+Report.report3 = DeliveredMessagesReport
+Report.report4 = ReqResReport
 
 ## Default settings for some routers settings
 ProphetRouter.secondsInTimeUnit = 30
@@ -171,4 +168,3 @@ RequestApp.passive = false
 Group.nrofApplications = 1
 Group.application1 = RequestApp
 Group.router = ReqResRouter
-#

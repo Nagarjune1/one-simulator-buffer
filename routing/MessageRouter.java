@@ -285,8 +285,7 @@ public abstract class MessageRouter {
 	public void sendMessage(String id, DTNHost to) {
 		Message m = getMessage(id);
 		Message m2;
-		if (m == null) throw new SimError("no message for id " +
-				id + " to send at " + this.host);
+		if (m == null) throw new SimError("no message for id " + id + " to send at " + this.host);
  
 		m2 = m.replicate();	// send a replicate of the message
 		to.receiveMessage(m2, this.host);
@@ -305,9 +304,10 @@ public abstract class MessageRouter {
 	 * Try to start receiving a message from another host.
 	 * @param m Message to put in the receiving buffer
 	 * @param from Who the message is from
-	 * @return Value zero if the node accepted the message (RCV_OK), value less
-	 * than zero if node rejected the message (e.g. DENIED_OLD), value bigger
-	 * than zero if the other node should try later (e.g. TRY_LATER_BUSY).
+	 * @return
+	 * Value zero if the node accepted the message (RCV_OK),
+	 * value less than zero if node rejected the message (e.g. DENIED_OLD),
+	 * value bigger than zero if the other node should try later (e.g. TRY_LATER_BUSY).
 	 */
 	public int receiveMessage(Message m, DTNHost from) {
 		Message newMessage = m.replicate();
@@ -354,8 +354,7 @@ public abstract class MessageRouter {
 		// If the application re-targets the message (changes 'to')
 		// then the message is not considered as 'delivered' to this host.
 		isFinalRecipient = aMessage.getTo() == this.host;
-		isFirstDelivery = isFinalRecipient &&
-		!isDeliveredMessage(aMessage);
+		isFirstDelivery = isFinalRecipient && !isDeliveredMessage(aMessage);
 
 		if (!isFinalRecipient && outgoing!=null) {
 			// not the final recipient and app doesn't want to drop the message
