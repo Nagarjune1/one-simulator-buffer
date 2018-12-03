@@ -472,8 +472,7 @@ public abstract class MessageRouter {
 	 */
 	public void deleteMessage(String id, boolean drop) {
 		Message removed = removeFromMessages(id); 
-		if (removed == null) throw new SimError("no message for id " +
-				id + " to remove at " + this.host);
+		if (removed == null) throw new SimError("no message for id " + id + " to remove at " + this.host);
 		
 		for (MessageListener ml : this.mListeners) {
 			ml.messageDeleted(removed, this.host, drop);
@@ -510,8 +509,7 @@ public abstract class MessageRouter {
 						m2 = (Message)o2;
 					}
 					else {
-						throw new SimError("Invalid type of objects in " + 
-								"the list");
+						throw new SimError("Invalid type of objects in the list");
 					}
 					
 					diff = m1.getReceiveTime() - m2.getReceiveTime();
@@ -634,8 +632,7 @@ public abstract class MessageRouter {
 	 * @return A String presentation of this router
 	 */
 	public String toString() {
-		return getClass().getSimpleName() + " of " + 
-			this.getHost().toString() + " with " + getNrofMessages() 
-			+ " messages";
+		return getClass().getSimpleName() + " of " + this.getHost().toString()
+		 + " with " + getNrofMessages() + " messages";
 	}
 }

@@ -32,8 +32,7 @@ public class MessageRelayEvent extends MessageEvent {
 	 * @param time Time when this event happens
 	 * @param stage The stage of the event (SENDING, TRANSFERRED, or ABORTED)
 	 */
-	public MessageRelayEvent(int from, int to, String id, double time,
-			int stage) {
+	public MessageRelayEvent(int from, int to, String id, double time, int stage) {
 		super(from, to, id, time);
 		this.stage = stage;
 	}

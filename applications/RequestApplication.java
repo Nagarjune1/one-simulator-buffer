@@ -18,10 +18,10 @@ import core.World;
 public class RequestApplication extends Application {
     /** Run in passive mode - don't generate request but respond */
 	public static final String REQUEST_PASSIVE = "passive";
+	/** Request host interval */
+	public static final String REQUEST_SPREAD = "spread";
 	/** Request generation interval */
 	public static final String REQUEST_INTERVAL = "interval";
-    /** Destination address range - inclusive lower, exclusive upper */
-	public static final String REQUEST_DEST_RANGE = "destinationRange";
     /** Seed for the app's random number generator */
 	public static final String REQUEST_SEED = "seed";
     /** Size of the request message */
@@ -31,12 +31,11 @@ public class RequestApplication extends Application {
 	public static final String APP_ID = "fi.tkk.netlab.RequestApplication";
 
     // Private vars
-    private boolean	lastRequest = false;
+    private double	lastRequest = 0;
+	private double	spread = 5;
     private double	interval = 500;
     private boolean passive = false;
     private int		seed = 0;
-	private int		destMin=0;
-	private int		destMax=1;
     private int		requestSize = 1;
 	private Random	rng;
 
@@ -49,6 +48,9 @@ public class RequestApplication extends Application {
         if (s.contains(REQUEST_PASSIVE)){
 			this.passive = s.getBoolean(REQUEST_PASSIVE);
 		}
+		if (s.contains(REQUEST_SPREAD)){
+			this.spread = s.getDouble(REQUEST_SPREAD);
+		}
 		if (s.contains(REQUEST_INTERVAL)){
 			this.interval = s.getDouble(REQUEST_INTERVAL);
 		}
@@ -57,11 +59,6 @@ public class RequestApplication extends Application {
 		}
 		if (s.contains(REQUEST_SIZE)) {
 			this.requestSize = s.getInt(REQUEST_SIZE);
-		}
-        if (s.contains(REQUEST_DEST_RANGE)){
-			int[] destination = s.getCsvInts(REQUEST_DEST_RANGE,2);
-			this.destMin = destination[0];
-			this.destMax = destination[1];
 		}
 
         rng = new Random(this.seed);
@@ -76,10 +73,9 @@ public class RequestApplication extends Application {
 	public RequestApplication(RequestApplication a) {
 		super(a);
 		this.lastRequest = a.getLastRequest();
+		this.spread = a.getSpread();
 		this.interval = a.getInterval();
 		this.passive = a.isPassive();
-		this.destMax = a.getDestMax();
-		this.destMin = a.getDestMin();
         this.seed = a.getSeed();
 		this.requestSize = a.getRequestSize();
         this.rng = new Random(this.seed);
@@ -96,20 +92,6 @@ public class RequestApplication extends Application {
 		return msg;
 	}
 
-    /** 
-	 * Draws a random host from the destination range
-	 * @return host
-	 */
-	private DTNHost randomHost() {
-		int destaddr = 0;
-		if (destMax == destMin) {
-			destaddr = destMin;
-		}
-		destaddr = destMin + rng.nextInt(destMax - destMin);
-		World w = SimScenario.getInstance().getWorld();
-		return w.getNodeByAddress(destaddr);
-	}
-
     @Override
 	public Application replicate() {
 		return new RequestApplication(this);
@@ -122,10 +104,9 @@ public class RequestApplication extends Application {
     @Override
 	public void update(DTNHost host) {
         if (this.passive) return;
-		if (!this.lastRequest && host.getAddress() % 2 == 0) {
-			// Time to send a new content
-			// prevent too much flooding of interest packets, only create if host has even address
-			Message m = new Message(host, randomHost(), getId(host), getRequestSize());
+		double curTime = SimClock.getTime();
+		if (curTime - this.lastRequest >= this.interval && host.getAddress() % this.spread == 0) {
+			Message m = new Message(host, null, getId(host), getRequestSize());
 			m.addProperty("type", "request");
 			m.setAppID(APP_ID);
 			host.createNewMessage(m);
@@ -133,22 +114,36 @@ public class RequestApplication extends Application {
 			// Call listeners
 			super.sendEventToListeners("SentRequest", null, host);
 			
-			this.lastRequest = true;
+			this.lastRequest = curTime;
 		}
     }
 
     /**
 	 * @return the lastRequest
 	 */
-	public boolean getLastRequest() {
+	public double getLastRequest() {
 		return lastRequest;
 	}
 
 	/**
 	 * @param lastRequest the lastRequest to set
 	 */
-	public void setLastRequest(boolean lastRequest) {
+	public void setLastRequest(double lastRequest) {
 		this.lastRequest = lastRequest;
+	}
+
+	/**
+	 * @return the spread
+	 */
+	public double getSpread() {
+		return spread;
+	}
+
+	/**
+	 * @param spread the spread to set
+	 */
+	public void setSpread(double spread) {
+		this.spread = spread;
 	}
 
     /**
@@ -178,36 +173,8 @@ public class RequestApplication extends Application {
 	public void setPassive(boolean passive) {
 		this.passive = passive;
 	}
-
+	
 	/**
-	 * @return the destMin
-	 */
-	public int getDestMin() {
-		return destMin;
-	}
-
-	/**
-	 * @param destMin the destMin to set
-	 */
-	public void setDestMin(int destMin) {
-		this.destMin = destMin;
-	}
-
-	/**
-	 * @return the destMax
-	 */
-	public int getDestMax() {
-		return destMax;
-	}
-
-	/**
-	 * @param destMax the destMax to set
-	 */
-	public void setDestMax(int destMax) {
-		this.destMax = destMax;
-	}
-
-    /**
 	 * @return the seed
 	 */
 	public int getSeed() {

@@ -156,15 +156,15 @@ GUI.EventLogPanel.nrofEvents = 100
 
 
 
+# This configuration file adds Generator application for all the nodes
 
 # Define new application
-RequestApp.type = RequestApplication
-RequestApp.interval = 1000
-RequestApp.destinationRange = 0,79
-RequestApp.requestSize = 5
-RequestApp.passive = false
+generatorApp.type = GeneratorApplication
+generatorApp.interval = 1000
+generatorApp.passive = false
+generatorApp.contentType = png|jpg|random
 
-# Set Request app for all nodes
-Group.nrofApplications = 1
-Group.application1 = RequestApp
-Group.router = ReqResRouter
+# Set Generator app for all nodes
+Group1.nrofApplications = 1
+Group1.application1 = generatorApp
+Group1.router = ReqResRouter

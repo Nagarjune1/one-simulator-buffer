@@ -7,6 +7,7 @@ package core;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 
 import movement.MovementModel;
 import movement.Path;
@@ -33,6 +34,10 @@ public class DTNHost implements Comparable<DTNHost> {
 	private List<MovementListener> movListeners;
 	private List<NetworkInterface> net;
 	private ModuleCommunicationBus comBus;
+
+	// additional
+	private int destMin = 0;
+	private int destMax = 79;
 
 	static {
 		DTNSim.registerForReset(DTNHost.class.getCanonicalName());
@@ -487,11 +492,35 @@ public class DTNHost implements Comparable<DTNHost> {
 		this.router.messageAborted(id, from, bytesRemaining);
 	}
 
+	// TODO: additional
 	/**
 	 * Creates a new message to this host's router
 	 * @param m The message to create
 	 */
 	public void createNewMessage(Message m) {
+		// for request packet, randomise target packet and desination node
+		String type = (String) m.getProperty("type");
+		if (type != null) {
+			// pick a random integer within destination range
+			int randomInt = 0;
+			Random rng = new Random();
+			if (destMax == destMin) randomInt = destMin;
+			randomInt = destMin + rng.nextInt(destMax - destMin);
+
+			// declare random destinations and target packets for interest packets
+			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomInt);
+			m.setTo(randDest);
+			
+			if (type.equals("request")) {
+				m.addProperty("target", "M" + randomInt);
+			} else if (type.equals("content")) {
+				// get list of file types
+				List<String> currentTypes = (List<String>) m.getProperty("contenttype");
+				// generate random index to choose a random content type
+				int randomIndex = (int)(Math.random() * (currentTypes.size()));
+				m.updateProperty("contenttype", currentTypes.get(randomIndex));
+			}
+		}
 		this.router.createNewMessage(m);
 	}
 

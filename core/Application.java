@@ -25,8 +25,7 @@ import java.util.List;
  * name (e.g., mySimpleApp) and setting its <code>type</code> property to the
  * concrete application class: <code>mySimpleApp.type = SimpleApplication
  * </code>. These application instances can be assigned to node groups using the
- * <code>Group.application</code> setting: <code>Group1.application =
- * mySimpleApp</code>.
+ * <code>Group.application</code> setting: <code>Group1.application = mySimpleApp</code>.
  * </p>
  * 
  * @author mjpitka
@@ -35,7 +34,6 @@ import java.util.List;
 public abstract class Application {
 
 	private List<ApplicationListener> aListeners = null;
-	
 	public String	appID	= null;
 
 	public Application(){	
@@ -70,7 +68,6 @@ public abstract class Application {
 
 	/** 
 	 * Called every simulation cycle.
-	 * 
 	 * @param host	The host this application instance is attached to.
 	 */
 	public abstract void update(DTNHost host);

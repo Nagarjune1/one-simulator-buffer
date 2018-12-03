@@ -34,8 +34,7 @@ public class MessageDeliveryReport extends Report implements MessageListener {
 		write(HEADER);
 	}
 
-	public void messageTransferred(Message m, DTNHost from, DTNHost to, 
-			boolean firstDelivery) {
+	public void messageTransferred(Message m, DTNHost from, DTNHost to, boolean firstDelivery) {
 		if (firstDelivery && !isWarmup() && !isWarmupID(m.getId())) {
 			delivered++;
 			reportValues();
@@ -56,8 +55,7 @@ public class MessageDeliveryReport extends Report implements MessageListener {
 	 */
 	private void reportValues() {
 		double prob = (1.0 * delivered) / created;
-		write(format(getSimTime()) + " " + created + " " + delivered + 
-				" " + format(prob));
+		write(format(getSimTime()) + " " + created + " " + delivered + " " + format(prob));
 	}
 
 	// nothing to implement for the rest

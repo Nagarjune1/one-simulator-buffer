@@ -41,11 +41,15 @@ public class ReqResRouter extends ActiveRouter {
 	@Override
 	public Message messageTransferred(String id, DTNHost from) {
 		Message m = super.messageTransferred(id, from);
-		DTNHost h = getHost();
-		String idToFind = "M" + m.getId().substring(1);
 		// only check buffer messages if received message is an interest packet
-		if (m.getProperty("type").equals("request") && hasMessage(idToFind)) {
-			getMessage(idToFind).updateProperty("type", "response");
+		if (m.getProperty("type") != null && m.getProperty("type").equals("request")) {
+			String idToFind = (String) m.getProperty("target");
+			if (hasMessage(idToFind)) {
+				Message match = getMessage(idToFind);
+				match.updateProperty("type", "response");
+				match.setRequest(m);
+				match.setTo(m.getFrom());
+			}
 		}
 		return m;
 	}
@@ -65,12 +69,11 @@ public class ReqResRouter extends ActiveRouter {
 		ArrayList<Message> messagesToTransfer = new ArrayList<Message>();
 		for (Message m : this.getMessageCollection()) {
 			String type = (String) m.getProperty("type");
-			if (type != null) {
-				if (type.equals("response")) {
-					messagesToTransfer.add(0,m);
-				} else if (type.equals("request")) {
-					messagesToTransfer.add(m);
-				}
+			if (m.isResponse()) {
+				messagesToTransfer.add(0,m);
+			}
+			if (type != null && (type.equals("request") || type.equals("content"))) {
+				messagesToTransfer.add(m);
 			}
 		}
 		this.tryMessagesToConnections(messagesToTransfer, this.getConnections());

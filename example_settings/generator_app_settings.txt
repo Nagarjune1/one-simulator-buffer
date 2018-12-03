@@ -4,6 +4,7 @@
 generatorApp.type = GeneratorApplication
 generatorApp.interval = 1000
 generatorApp.passive = false
+generatorApp.contentType = png|jpg|random
 
 # Set Generator app for all nodes
 Group1.nrofApplications = 1

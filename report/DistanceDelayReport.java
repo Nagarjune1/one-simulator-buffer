@@ -40,8 +40,7 @@ public class DistanceDelayReport extends Report implements MessageListener {
 	/**
 	 * This is called when a message is transferred between nodes
 	 */
-	public void messageTransferred(Message m, DTNHost from, DTNHost to,
-			boolean firstDelivery) {
+	public void messageTransferred(Message m, DTNHost from, DTNHost to, boolean firstDelivery) {
 		if (isWarmupID(m.getId()) || !firstDelivery) {
 			return; // report is only interested of first deliveries  
 		}

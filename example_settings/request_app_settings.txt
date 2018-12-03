@@ -1,7 +1,7 @@
 # Define new application
 RequestApp.type = RequestApplication
+RequestApp.spread = 10
 RequestApp.interval = 1000
-RequestApp.destinationRange = 0,125
 RequestApp.requestSize = 5
 RequestApp.passive = false
 

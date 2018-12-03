@@ -149,8 +149,7 @@ public class MessageEventGenerator implements EventQueue {
 	 * @return message size
 	 */
 	protected int drawMessageSize() {
-		int sizeDiff = sizeRange[0] == sizeRange[1] ? 0 : 
-			rng.nextInt(sizeRange[1] - sizeRange[0]);
+		int sizeDiff = sizeRange[0] == sizeRange[1] ? 0 : rng.nextInt(sizeRange[1] - sizeRange[0]);
 		return sizeRange[0] + sizeDiff;
 	}
 	
@@ -159,8 +158,7 @@ public class MessageEventGenerator implements EventQueue {
 	 * @return the time difference
 	 */
 	protected int drawNextEventTimeDiff() {
-		int timeDiff = msgInterval[0] == msgInterval[1] ? 0 : 
-			rng.nextInt(msgInterval[1] - msgInterval[0]);
+		int timeDiff = msgInterval[0] == msgInterval[1] ? 0 : rng.nextInt(msgInterval[1] - msgInterval[0]);
 		return msgInterval[0] + timeDiff;
 	}
 	
@@ -174,8 +172,7 @@ public class MessageEventGenerator implements EventQueue {
 	protected int drawToAddress(int hostRange[], int from) {
 		int to;
 		do {
-			to = this.toHostRange != null ? drawHostAddress(this.toHostRange):
-				drawHostAddress(this.hostRange); 
+			to = this.toHostRange != null ? drawHostAddress(this.toHostRange):drawHostAddress(this.hostRange); 
 		} while (from==to);
 		
 		return to;
