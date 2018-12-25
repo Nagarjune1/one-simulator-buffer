@@ -1,8 +1,11 @@
+# This configuration file adds Request application for all the nodes
+
 # Define new application
 RequestApp.type = RequestApplication
-RequestApp.spread = 10
+RequestApp.spread = 5
 RequestApp.interval = 1000
-RequestApp.requestSize = 5
+RequestApp.destinationRange = 0,79
+RequestApp.requestSize = 10
 RequestApp.passive = false
 
 # Set Request app for all nodes

@@ -47,8 +47,12 @@ public class ReqResRouter extends ActiveRouter {
 			if (hasMessage(idToFind)) {
 				Message match = getMessage(idToFind);
 				match.updateProperty("type", "response");
+				// keep track of the packet that requested for this information
 				match.setRequest(m);
+				// set the destination packet of this information to the source of request packet
 				match.setTo(m.getFrom());
+				// remove interest packet from buffer because it has served its purpose
+				removeFromMessages(id);
 			}
 		}
 		return m;
@@ -70,9 +74,11 @@ public class ReqResRouter extends ActiveRouter {
 		for (Message m : this.getMessageCollection()) {
 			String type = (String) m.getProperty("type");
 			if (m.isResponse()) {
+				// add to the start of buffer
 				messagesToTransfer.add(0,m);
 			}
-			if (type != null && (type.equals("request") || type.equals("content"))) {
+			if (type.equals("request")) {
+				// add to the end of buffer
 				messagesToTransfer.add(m);
 			}
 		}

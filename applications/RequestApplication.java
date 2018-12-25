@@ -22,8 +22,8 @@ public class RequestApplication extends Application {
 	public static final String REQUEST_SPREAD = "spread";
 	/** Request generation interval */
 	public static final String REQUEST_INTERVAL = "interval";
-    /** Seed for the app's random number generator */
-	public static final String REQUEST_SEED = "seed";
+	/** Destination address range - inclusive lower, exclusive upper */
+	public static final String REQUEST_DEST_RANGE = "destinationRange";
     /** Size of the request message */
 	public static final String REQUEST_SIZE = "requestSize";
 
@@ -34,10 +34,10 @@ public class RequestApplication extends Application {
     private double	lastRequest = 0;
 	private double	spread = 5;
     private double	interval = 500;
+	private int		destMin = 0;
+	private int		destMax = 1;
     private boolean passive = false;
-    private int		seed = 0;
     private int		requestSize = 1;
-	private Random	rng;
 
     /** 
 	 * Creates a new request application with the given settings.
@@ -54,14 +54,15 @@ public class RequestApplication extends Application {
 		if (s.contains(REQUEST_INTERVAL)){
 			this.interval = s.getDouble(REQUEST_INTERVAL);
 		}
-        if (s.contains(REQUEST_SEED)){
-			this.seed = s.getInt(REQUEST_SEED);
-		}
 		if (s.contains(REQUEST_SIZE)) {
 			this.requestSize = s.getInt(REQUEST_SIZE);
 		}
+		if (s.contains(REQUEST_DEST_RANGE)){
+			int[] destination = s.getCsvInts(REQUEST_DEST_RANGE,2);
+			this.destMin = destination[0];
+			this.destMax = destination[1];
+		}
 
-        rng = new Random(this.seed);
 		super.setAppID(APP_ID);
 	}
 
@@ -76,9 +77,9 @@ public class RequestApplication extends Application {
 		this.spread = a.getSpread();
 		this.interval = a.getInterval();
 		this.passive = a.isPassive();
-        this.seed = a.getSeed();
+		this.destMax = a.getDestMax();
+		this.destMin = a.getDestMin();
 		this.requestSize = a.getRequestSize();
-        this.rng = new Random(this.seed);
 	}
 
     /** 
@@ -97,6 +98,15 @@ public class RequestApplication extends Application {
 		return new RequestApplication(this);
 	}
 
+	public int randomInteger() {
+		int randomInt = 0;
+		Random rng = new Random();
+		if (destMax == destMin) randomInt = destMin;
+		randomInt = destMin + rng.nextInt(destMax - destMin);
+
+		return randomInt;
+	}
+
     /** 
 	 * Generate a request.
 	 * @param host to which the application instance is attached
@@ -109,6 +119,11 @@ public class RequestApplication extends Application {
 			Message m = new Message(host, null, getId(host), getRequestSize());
 			m.addProperty("type", "request");
 			m.setAppID(APP_ID);
+
+			// declare random destinations and target packets for interest packets
+			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomInteger());
+			m.setTo(randDest);
+			m.addProperty("target", "M" + randomInteger());
 			host.createNewMessage(m);
 			
 			// Call listeners
@@ -173,19 +188,33 @@ public class RequestApplication extends Application {
 	public void setPassive(boolean passive) {
 		this.passive = passive;
 	}
-	
+
 	/**
-	 * @return the seed
+	 * @return the destMin
 	 */
-	public int getSeed() {
-		return seed;
+	public int getDestMin() {
+		return destMin;
 	}
 
 	/**
-	 * @param seed the seed to set
+	 * @param destMin the destMin to set
 	 */
-	public void setSeed(int seed) {
-		this.seed = seed;
+	public void setDestMin(int destMin) {
+		this.destMin = destMin;
+	}
+
+	/**
+	 * @return the destMax
+	 */
+	public int getDestMax() {
+		return destMax;
+	}
+
+	/**
+	 * @param destMax the destMax to set
+	 */
+	public void setDestMax(int destMax) {
+		this.destMax = destMax;
 	}
 
     /**

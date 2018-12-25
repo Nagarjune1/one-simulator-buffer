@@ -25,8 +25,12 @@ public class GeneratorApplication extends Application {
 	public static final String CONTENT_SPREAD = "spread";
 	/** Content generation interval */
 	public static final String CONTENT_INTERVAL = "interval";
+	/** Destination address range - inclusive lower, exclusive upper */
+	public static final String CONTENT_DEST_RANGE = "destinationRange";
 	/** Size of the content message */
 	public static final String CONTENT_TYPE = "contentType";
+	/** Size of the content message */
+	public static final String CONTENT_SIZE = "contentSize";
 
     /** Application ID */
 	public static final String APP_ID = "fi.tkk.netlab.GeneratorApplication";
@@ -36,6 +40,8 @@ public class GeneratorApplication extends Application {
 	private double			spread = 5;
     private double			interval = 500;
     private boolean 		passive = false;
+	private int				destMin = 0;
+	private int				destMax = 1;
     private int				contentSize = 1;
 	private List<String> 	contentType = new ArrayList();
 
@@ -57,6 +63,14 @@ public class GeneratorApplication extends Application {
 		if (s.contains(CONTENT_TYPE)){
 			this.contentType = Arrays.asList(s.getSetting(CONTENT_TYPE).split("\\|"));
 		}
+		if (s.contains(CONTENT_SIZE)) {
+			this.contentSize = s.getInt(CONTENT_SIZE);
+		}
+		if (s.contains(CONTENT_DEST_RANGE)){
+			int[] destination = s.getCsvInts(CONTENT_DEST_RANGE,2);
+			this.destMin = destination[0];
+			this.destMax = destination[1];
+		}
 
 		super.setAppID(APP_ID);
 	}
@@ -72,6 +86,8 @@ public class GeneratorApplication extends Application {
 		this.spread = a.getSpread();
 		this.interval = a.getInterval();
 		this.passive = a.isPassive();
+		this.destMax = a.getDestMax();
+		this.destMin = a.getDestMin();
 		this.contentSize = a.getContentSize();
 		this.contentType = a.getContentType();
 	}
@@ -92,6 +108,15 @@ public class GeneratorApplication extends Application {
 		return new GeneratorApplication(this);
 	}
 
+	public int randomInteger() {
+		int randomInt = 0;
+		Random rng = new Random();
+		if (destMax == destMin) randomInt = destMin;
+		randomInt = destMin + rng.nextInt(destMax - destMin);
+
+		return randomInt;
+	}
+
     /** 
 	 * Generate a request.
 	 * 
@@ -104,8 +129,14 @@ public class GeneratorApplication extends Application {
 		if (curTime - this.lastCreation >= this.interval && host.getAddress() % this.spread == 0) {
 			Message m = new Message(host, null, getId(host), getContentSize());
 			m.addProperty("type", "content");
+
+			// declare random destinations and target packets for interest packets
+			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomInteger());
+			m.setTo(randDest);
+
 			// send in all the possible content types to be randomized later
-			m.addProperty("contenttype", this.contentType);
+			int randomIndex = (int)(Math.random() * (this.contentType.size()));
+			m.addProperty("contenttype", this.contentType.get(randomIndex));
 			m.setAppID(APP_ID);
 			host.createNewMessage(m);
 			
@@ -173,6 +204,34 @@ public class GeneratorApplication extends Application {
 	}
 
 	/**
+	 * @return the destMin
+	 */
+	public int getDestMin() {
+		return destMin;
+	}
+
+	/**
+	 * @param destMin the destMin to set
+	 */
+	public void setDestMin(int destMin) {
+		this.destMin = destMin;
+	}
+
+	/**
+	 * @return the destMax
+	 */
+	public int getDestMax() {
+		return destMax;
+	}
+
+	/**
+	 * @param destMax the destMax to set
+	 */
+	public void setDestMax(int destMax) {
+		this.destMax = destMax;
+	}
+
+	/**
 	 * @return the contentType
 	 */
 	public List<String> getContentType() {
@@ -198,7 +257,7 @@ public class GeneratorApplication extends Application {
 	 * @return the id
 	 */
 	public String getId(DTNHost host) {
-		return "G" + host.getAddress();
+		return "M" + host.getAddress();
 	}
 
 }

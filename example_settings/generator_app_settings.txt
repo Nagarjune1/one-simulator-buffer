@@ -3,6 +3,7 @@
 # Define new application
 generatorApp.type = GeneratorApplication
 generatorApp.interval = 1000
+generatorApp.destinationRange = 0,79
 generatorApp.passive = false
 generatorApp.contentType = png|jpg|random
 
