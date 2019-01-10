@@ -46,7 +46,6 @@ public class ReqResRouter extends ActiveRouter {
 			String idToFind = (String) m.getProperty("target");
 			if (hasMessage(idToFind)) {
 				Message match = getMessage(idToFind);
-				match.updateProperty("type", "response");
 				// keep track of the packet that requested for this information
 				match.setRequest(m);
 				// set the destination packet of this information to the source of request packet
@@ -77,7 +76,7 @@ public class ReqResRouter extends ActiveRouter {
 				// add to the start of buffer
 				messagesToTransfer.add(0,m);
 			}
-			if (type.equals("request")) {
+			if (type != null && type.equals("request")) {
 				// add to the end of buffer
 				messagesToTransfer.add(m);
 			}

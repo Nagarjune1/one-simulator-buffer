@@ -21,28 +21,30 @@ import core.World;
 public class GeneratorApplication extends Application {
 	/** Run in passive mode - don't generate content but respond */
 	public static final String CONTENT_PASSIVE = "passive";
-	/** Content host interval */
-	public static final String CONTENT_SPREAD = "spread";
+	/** Content host range */
+	public static final String CONTENT_PROPORTION = "proportion";
 	/** Content generation interval */
 	public static final String CONTENT_INTERVAL = "interval";
 	/** Destination address range - inclusive lower, exclusive upper */
 	public static final String CONTENT_DEST_RANGE = "destinationRange";
+	/** Content size range - inclusive lower, exclusive upper */
+	public static final String CONTENT_SIZE_RANGE = "sizeRange";
 	/** Size of the content message */
 	public static final String CONTENT_TYPE = "contentType";
-	/** Size of the content message */
-	public static final String CONTENT_SIZE = "contentSize";
 
     /** Application ID */
 	public static final String APP_ID = "fi.tkk.netlab.GeneratorApplication";
 
     // Private vars
     private double			lastCreation = 0;
-	private double			spread = 5;
     private double			interval = 500;
-    private boolean 		passive = false;
+	private int				propMin = 0;
+	private int				propMax = 1;
 	private int				destMin = 0;
 	private int				destMax = 1;
-    private int				contentSize = 1;
+	private int				sizeMin = 1;
+	private int				sizeMax = 10;
+    private boolean 		passive = false;
 	private List<String> 	contentType = new ArrayList();
 
     /** 
@@ -54,8 +56,10 @@ public class GeneratorApplication extends Application {
         if (s.contains(CONTENT_PASSIVE)){
 			this.passive = s.getBoolean(CONTENT_PASSIVE);
 		}
-		if (s.contains(CONTENT_SPREAD)){
-			this.spread = s.getDouble(CONTENT_SPREAD);
+		if (s.contains(CONTENT_PROPORTION)){
+			int[] prop = s.getCsvInts(CONTENT_PROPORTION,2);
+			this.propMin = prop[0];
+			this.propMax = prop[1];
 		}
 		if (s.contains(CONTENT_INTERVAL)){
 			this.interval = s.getDouble(CONTENT_INTERVAL);
@@ -63,8 +67,10 @@ public class GeneratorApplication extends Application {
 		if (s.contains(CONTENT_TYPE)){
 			this.contentType = Arrays.asList(s.getSetting(CONTENT_TYPE).split("\\|"));
 		}
-		if (s.contains(CONTENT_SIZE)) {
-			this.contentSize = s.getInt(CONTENT_SIZE);
+		if (s.contains(CONTENT_SIZE_RANGE)) {
+			int[] size = s.getCsvInts(CONTENT_SIZE_RANGE,2);
+			this.sizeMin = size[0];
+			this.sizeMax = size[1];
 		}
 		if (s.contains(CONTENT_DEST_RANGE)){
 			int[] destination = s.getCsvInts(CONTENT_DEST_RANGE,2);
@@ -83,12 +89,14 @@ public class GeneratorApplication extends Application {
 	public GeneratorApplication(GeneratorApplication a) {
 		super(a);
 		this.lastCreation = a.getLastCreation();
-		this.spread = a.getSpread();
+		this.propMin = a.getPropMin();
+		this.propMax = a.getPropMax();
 		this.interval = a.getInterval();
 		this.passive = a.isPassive();
 		this.destMax = a.getDestMax();
 		this.destMin = a.getDestMin();
-		this.contentSize = a.getContentSize();
+		this.sizeMax = a.getSizeMax();
+		this.sizeMin = a.getSizeMin();
 		this.contentType = a.getContentType();
 	}
 
@@ -108,7 +116,16 @@ public class GeneratorApplication extends Application {
 		return new GeneratorApplication(this);
 	}
 
-	public int randomInteger() {
+	public int randomSize() {
+		int randomInt = 0;
+		Random rng = new Random();
+		if (sizeMax == sizeMin) randomInt = sizeMin;
+		randomInt = sizeMin + rng.nextInt(sizeMax - sizeMin);
+
+		return randomInt;
+	}
+
+	public int randomDestination() {
 		int randomInt = 0;
 		Random rng = new Random();
 		if (destMax == destMin) randomInt = destMin;
@@ -117,8 +134,15 @@ public class GeneratorApplication extends Application {
 		return randomInt;
 	}
 
+	/*
+	 * Checks if host has application to actively data packets
+	 */
+	public boolean hostActive(DTNHost host) {
+		return (host.getAddress() < getPropMax() && host.getAddress() >= getPropMin());
+	}
+
     /** 
-	 * Generate a request.
+	 * Generate a data packet.
 	 * 
 	 * @param host to which the application instance is attached
 	 */
@@ -126,16 +150,15 @@ public class GeneratorApplication extends Application {
 	public void update(DTNHost host) {
 		if (this.passive) return;
 		double curTime = SimClock.getTime();
-		if (curTime - this.lastCreation >= this.interval && host.getAddress() % this.spread == 0) {
-			Message m = new Message(host, null, getId(host), getContentSize());
-			m.addProperty("type", "content");
+		if (curTime - this.lastCreation >= this.interval && hostActive(host)) {
+			Message m = new Message(host, null, getId(host), randomSize());
 
 			// declare random destinations and target packets for interest packets
-			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomInteger());
+			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomDestination());
 			m.setTo(randDest);
 
 			// send in all the possible content types to be randomized later
-			int randomIndex = (int)(Math.random() * (this.contentType.size()));
+			int randomIndex = (int)(Math.random() * this.contentType.size());
 			m.addProperty("contenttype", this.contentType.get(randomIndex));
 			m.setAppID(APP_ID);
 			host.createNewMessage(m);
@@ -148,108 +171,52 @@ public class GeneratorApplication extends Application {
 	}
 
 	/**
-	 * @return the lastCreation
+	 * lastCreation
 	 */
-	public double getLastCreation() {
-		return lastCreation;
-	}
+	public double getLastCreation() { return lastCreation; }
+	public void setLastCreation(double lastCreation) { this.lastCreation = lastCreation; }
 
 	/**
-	 * @param lastCreation the lastCreation to set
+	 * interval
 	 */
-	public void setLastCreation(double lastCreation) {
-		this.lastCreation = lastCreation;
-	}
+	public double getInterval() { return interval; }
+	public void setInterval(double interval) { this.interval = interval; }
 
 	/**
-	 * @return the spread
+	 * passive
 	 */
-	public double getSpread() {
-		return spread;
-	}
+	public boolean isPassive() { return passive; }
+	public void setPassive(boolean passive) { this.passive = passive; }
 
 	/**
-	 * @param spread the spread to set
+	 * destMin and destMax
 	 */
-	public void setSpread(double spread) {
-		this.spread = spread;
-	}
+	public int getDestMin() { return destMin; }
+	public void setDestMin(int destMin) { this.destMin = destMin; }
+	public int getDestMax() { return destMax; }
+	public void setDestMax(int destMax) { this.destMax = destMax; }
 
 	/**
-	 * @return the interval
+	 * propMin and propMax
 	 */
-	public double getInterval() {
-		return interval;
-	}
+	public int getPropMin() { return propMin; }
+	public void setPropMin(int propMin) { this.propMin = propMin; }
+	public int getPropMax() { return propMax; }
+	public void setPropMax(int propMax) { this.propMax = propMax; }
 
 	/**
-	 * @param interval the interval to set
+	 * sizeMin and sizeMax
 	 */
-	public void setInterval(double interval) {
-		this.interval = interval;
-	}
-
-	/**
-	 * @return the passive
-	 */
-	public boolean isPassive() {
-		return passive;
-	}
-
-	/**
-	 * @param passive the passive to set
-	 */
-	public void setPassive(boolean passive) {
-		this.passive = passive;
-	}
-
-	/**
-	 * @return the destMin
-	 */
-	public int getDestMin() {
-		return destMin;
-	}
-
-	/**
-	 * @param destMin the destMin to set
-	 */
-	public void setDestMin(int destMin) {
-		this.destMin = destMin;
-	}
-
-	/**
-	 * @return the destMax
-	 */
-	public int getDestMax() {
-		return destMax;
-	}
-
-	/**
-	 * @param destMax the destMax to set
-	 */
-	public void setDestMax(int destMax) {
-		this.destMax = destMax;
-	}
+	public int getSizeMin() { return sizeMin; }
+	public void setSizeMin(int sizeMin) { this.sizeMin = sizeMin; }
+	public int getSizeMax() { return sizeMax; }
+	public void setSizeMax(int sizeMax) { this.sizeMax = sizeMax; }
 
 	/**
 	 * @return the contentType
 	 */
 	public List<String> getContentType() {
 		return contentType;
-	}
-
-    /**
-	 * @return the contentSize
-	 */
-	public int getContentSize() {
-		return contentSize;
-	}
-
-    /**
-	 * @param contentSize the contentSize to set
-	 */
-	public void setContentSize(int contentSize) {
-		this.contentSize = contentSize;
 	}
 
 	/**

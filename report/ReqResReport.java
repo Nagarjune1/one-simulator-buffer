@@ -11,10 +11,8 @@ import core.Message;
 import core.MessageListener;
 
 public class ReqResReport extends Report implements MessageListener {
-	public static String HEADER="# time  ID  req_pack  path";
-	private int created;
-	private int delivered;
-	private int matched;
+	private float excess;
+	private float total;
 
 	/**
 	 * Constructor.
@@ -26,31 +24,19 @@ public class ReqResReport extends Report implements MessageListener {
 	@Override
 	public void init() {
 		super.init();
-		created = 0;
-		delivered = 0;
-		write(HEADER);
-	}
-
-	/** 
-	 * Returns the given messages hop path as a string
-	 * @param m The message
-	 * @return hop path as a string
-	 */
-	private String getPathString(Message m) {
-		List<DTNHost> hops = m.getHops();
-		String str = m.getFrom().toString();
-		
-		for (int i=1; i<hops.size(); i++) {
-			str += "->" + hops.get(i); 
-		}
-		
-		return str;
+		this.excess = 0;
+		this.total = 0;
 	}
 
 	public void messageTransferred(Message m, DTNHost from, DTNHost to, boolean firstDelivery) {
-		if (!isWarmupID(m.getId()) && m.isResponse()) {
-			write(format(getSimTime()) + " " + m.getId() + " " +
-				m.getRequest() + " " + getPathString(m));
+		String type = (String) m.getProperty("type");
+		if (!isWarmupID(m.getId()) && type == null) {
+			// total transfers
+			this.total++;
+			// transfers that are not to the destination
+			if (!firstDelivery) {
+				this.excess++;
+			}
 		}
 	}
 
@@ -66,6 +52,11 @@ public class ReqResReport extends Report implements MessageListener {
 
 	@Override
 	public void done() {
+		write("Excess: " + this.excess);
+		write("Total: " + this.total);
+
+		String percentage = String.format("%.4g%n", (this.total-this.excess)*100/this.total);
+		write("Efficiency (%): " + percentage);
 		super.done();
 	}
 }

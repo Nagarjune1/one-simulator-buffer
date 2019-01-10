@@ -99,8 +99,7 @@ public class MessageStatsReport extends Report implements MessageListener {
 
 		this.nrofRelayed++;
 		if (finalTarget) {
-			this.latencies.add(getSimTime() - 
-				this.creationTimes.get(m.getId()) );
+			this.latencies.add(getSimTime() - this.creationTimes.get(m.getId()));
 			this.nrofDelivered++;
 			this.hopCounts.add(m.getHops().size() - 1);
 			
@@ -155,7 +154,8 @@ public class MessageStatsReport extends Report implements MessageListener {
 				this.nrofResponseReqCreated;
 		}
 		
-		String statsText = "created: " + this.nrofCreated + 
+		String statsText = 
+			"created: " + this.nrofCreated + 
 			"\nstarted: " + this.nrofStarted + 
 			"\nrelayed: " + this.nrofRelayed +
 			"\naborted: " + this.nrofAborted +

@@ -18,8 +18,8 @@ import core.World;
 public class RequestApplication extends Application {
     /** Run in passive mode - don't generate request but respond */
 	public static final String REQUEST_PASSIVE = "passive";
-	/** Request host interval */
-	public static final String REQUEST_SPREAD = "spread";
+	/** Request host range */
+	public static final String REQUEST_PROPORTION = "proportion";
 	/** Request generation interval */
 	public static final String REQUEST_INTERVAL = "interval";
 	/** Destination address range - inclusive lower, exclusive upper */
@@ -32,8 +32,9 @@ public class RequestApplication extends Application {
 
     // Private vars
     private double	lastRequest = 0;
-	private double	spread = 5;
     private double	interval = 500;
+	private int		propMin = 0;
+	private int		propMax = 1;
 	private int		destMin = 0;
 	private int		destMax = 1;
     private boolean passive = false;
@@ -48,13 +49,15 @@ public class RequestApplication extends Application {
         if (s.contains(REQUEST_PASSIVE)){
 			this.passive = s.getBoolean(REQUEST_PASSIVE);
 		}
-		if (s.contains(REQUEST_SPREAD)){
-			this.spread = s.getDouble(REQUEST_SPREAD);
+		if (s.contains(REQUEST_PROPORTION)){
+			int[] prop = s.getCsvInts(REQUEST_PROPORTION,2);
+			this.propMin = prop[0];
+			this.propMax = prop[1];
 		}
 		if (s.contains(REQUEST_INTERVAL)){
 			this.interval = s.getDouble(REQUEST_INTERVAL);
 		}
-		if (s.contains(REQUEST_SIZE)) {
+		if (s.contains(REQUEST_SIZE)){
 			this.requestSize = s.getInt(REQUEST_SIZE);
 		}
 		if (s.contains(REQUEST_DEST_RANGE)){
@@ -74,7 +77,8 @@ public class RequestApplication extends Application {
 	public RequestApplication(RequestApplication a) {
 		super(a);
 		this.lastRequest = a.getLastRequest();
-		this.spread = a.getSpread();
+		this.propMin = a.getPropMin();
+		this.propMax = a.getPropMax();
 		this.interval = a.getInterval();
 		this.passive = a.isPassive();
 		this.destMax = a.getDestMax();
@@ -107,6 +111,13 @@ public class RequestApplication extends Application {
 		return randomInt;
 	}
 
+	/*
+	 * Checks if host has application to actively request packets
+	 */
+	public boolean hostActive(DTNHost host) {
+		return (host.getAddress() < getPropMax() && host.getAddress() >= getPropMin());
+	}
+
     /** 
 	 * Generate a request.
 	 * @param host to which the application instance is attached
@@ -115,15 +126,18 @@ public class RequestApplication extends Application {
 	public void update(DTNHost host) {
         if (this.passive) return;
 		double curTime = SimClock.getTime();
-		if (curTime - this.lastRequest >= this.interval && host.getAddress() % this.spread == 0) {
+		if (curTime - this.lastRequest >= this.interval && hostActive(host)) {
 			Message m = new Message(host, null, getId(host), getRequestSize());
 			m.addProperty("type", "request");
 			m.setAppID(APP_ID);
 
-			// declare random destinations and target packets for interest packets
+			// declare random destination
 			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomInteger());
 			m.setTo(randDest);
+			// declare random target packet
 			m.addProperty("target", "M" + randomInteger());
+			// declare random priority level
+			m.addProperty("priority", 1);
 			host.createNewMessage(m);
 			
 			// Call listeners
@@ -134,102 +148,44 @@ public class RequestApplication extends Application {
     }
 
     /**
-	 * @return the lastRequest
+	 * lastRequest
 	 */
-	public double getLastRequest() {
-		return lastRequest;
-	}
-
-	/**
-	 * @param lastRequest the lastRequest to set
-	 */
-	public void setLastRequest(double lastRequest) {
-		this.lastRequest = lastRequest;
-	}
-
-	/**
-	 * @return the spread
-	 */
-	public double getSpread() {
-		return spread;
-	}
-
-	/**
-	 * @param spread the spread to set
-	 */
-	public void setSpread(double spread) {
-		this.spread = spread;
-	}
+	public double getLastRequest() { return lastRequest; }
+	public void setLastRequest(double lastRequest) { this.lastRequest = lastRequest; }
 
     /**
-	 * @return the interval
+	 * interval
 	 */
-	public double getInterval() {
-		return interval;
-	}
+	public double getInterval() { return interval; }
+	public void setInterval(double interval) { this.interval = interval; }
 
 	/**
-	 * @param interval the interval to set
+	 * passive
 	 */
-	public void setInterval(double interval) {
-		this.interval = interval;
-	}
+	public boolean isPassive() { return passive; }
+	public void setPassive(boolean passive) { this.passive = passive; }
 
 	/**
-	 * @return the passive
+	 * destMin and destMax
 	 */
-	public boolean isPassive() {
-		return passive;
-	}
+	public int getDestMin() { return destMin; }
+	public void setDestMin(int destMin) { this.destMin = destMin; }
+	public int getDestMax() { return destMax; }
+	public void setDestMax(int destMax) { this.destMax = destMax; }
 
 	/**
-	 * @param passive the passive to set
+	 * propMin and propMax
 	 */
-	public void setPassive(boolean passive) {
-		this.passive = passive;
-	}
-
-	/**
-	 * @return the destMin
-	 */
-	public int getDestMin() {
-		return destMin;
-	}
-
-	/**
-	 * @param destMin the destMin to set
-	 */
-	public void setDestMin(int destMin) {
-		this.destMin = destMin;
-	}
-
-	/**
-	 * @return the destMax
-	 */
-	public int getDestMax() {
-		return destMax;
-	}
-
-	/**
-	 * @param destMax the destMax to set
-	 */
-	public void setDestMax(int destMax) {
-		this.destMax = destMax;
-	}
+	public int getPropMin() { return propMin; }
+	public void setPropMin(int propMin) { this.propMin = propMin; }
+	public int getPropMax() { return propMax; }
+	public void setPropMax(int propMax) { this.propMax = propMax; }
 
     /**
-	 * @return the requestSize
+	 * requestSize
 	 */
-	public int getRequestSize() {
-		return requestSize;
-	}
-
-    /**
-	 * @param requestSize the requestSize to set
-	 */
-	public void setRequestSize(int requestSize) {
-		this.requestSize = requestSize;
-	}
+	public int getRequestSize() { return requestSize; }
+	public void setRequestSize(int requestSize) { this.requestSize = requestSize; }
 
 	/**
 	 * @param host the host sending the request

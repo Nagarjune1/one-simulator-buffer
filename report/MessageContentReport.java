@@ -21,7 +21,7 @@ public class MessageContentReport extends Report implements UpdateListener {
     /**
 	 * end time of simulation
 	 */
-    private double endTime = 5000;
+    private double endTime = 10000;
 
 	/**
 	 * Constructor.
