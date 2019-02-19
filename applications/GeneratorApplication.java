@@ -152,6 +152,7 @@ public class GeneratorApplication extends Application {
 		double curTime = SimClock.getTime();
 		if (curTime - this.lastCreation >= this.interval && hostActive(host)) {
 			Message m = new Message(host, null, getId(host), randomSize());
+			m.addProperty("type", "data");
 
 			// declare random destinations and target packets for interest packets
 			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomDestination());
@@ -162,6 +163,9 @@ public class GeneratorApplication extends Application {
 			m.addProperty("contenttype", this.contentType.get(randomIndex));
 			m.setAppID(APP_ID);
 			host.createNewMessage(m);
+
+			// set location of data creation
+			m.addProperty("initiallocation", host.getLocation());
 			
 			// Call listeners
 			super.sendEventToListeners("SentContent", null, host);

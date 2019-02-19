@@ -11,4 +11,4 @@ RequestApp.passive = false
 # Set Request app for all nodes
 Group.nrofApplications = 1
 Group.application1 = RequestApp
-Group.router = ReqResRouter
+Group.router = ICN_FIFO_Router

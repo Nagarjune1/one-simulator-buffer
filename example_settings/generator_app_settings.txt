@@ -10,4 +10,4 @@ generatorApp.contentType = png|jpg|random
 # Set Generator app for all nodes
 Group1.nrofApplications = 1
 Group1.application1 = generatorApp
-Group1.router = ReqResRouter
+Group1.router = ICN_FIFO_Router

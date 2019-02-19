@@ -6,6 +6,7 @@ package routing;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import core.Settings;
 import core.Message;
@@ -17,13 +18,13 @@ import util.Tuple;
 /**
  * request response router to handle requests and return message packet
  */
-public class ReqResRouter extends ActiveRouter {
+public class ICN_FIFO_Router extends ActiveRouter {
 	/**
 	 * Constructor. Creates a new request response router based on the settings in
 	 * the given Settings object.
 	 * @param s The settings object
 	 */
-	public ReqResRouter(Settings s) {
+	public ICN_FIFO_Router(Settings s) {
 		super(s);
 		//TODO: read&use request response router specific settings (if any)
 	}
@@ -32,7 +33,7 @@ public class ReqResRouter extends ActiveRouter {
 	 * Copy constructor.
 	 * @param r The router prototype where setting values are copied from
 	 */
-	protected ReqResRouter(ReqResRouter r) {
+	protected ICN_FIFO_Router(ICN_FIFO_Router r) {
 		super(r);
 		//TODO: copy request response settings here (if any)
 	}
@@ -42,11 +43,11 @@ public class ReqResRouter extends ActiveRouter {
 	public Message messageTransferred(String id, DTNHost from) {
 		Message m = super.messageTransferred(id, from);
 		// only check buffer messages if received message is an interest packet
-		if (m.getProperty("type") != null && m.getProperty("type").equals("request")) {
+		if (m.getProperty("type").equals("request")) {
 			String idToFind = (String) m.getProperty("target");
 			if (hasMessage(idToFind)) {
 				Message match = getMessage(idToFind);
-				// keep track of the packet that requested for this information
+				// set request packet
 				match.setRequest(m);
 				// set the destination packet of this information to the source of request packet
 				match.setTo(m.getFrom());
@@ -69,24 +70,58 @@ public class ReqResRouter extends ActiveRouter {
 		 * 2) prioritise response packets to be sent through the same
 		 * connection where it received the interest packets
 		 */
-		ArrayList<Message> messagesToTransfer = new ArrayList<Message>();
+		ArrayList<Message> transferBuffer = new ArrayList<Message>();
 		for (Message m : this.getMessageCollection()) {
-			String type = (String) m.getProperty("type");
-			if (m.isResponse()) {
-				// add to the start of buffer
-				messagesToTransfer.add(0,m);
+			// add message to buffer if buffer is empty
+			if (transferBuffer.size() == 0) {
+				transferBuffer.add(m);
+				continue;
 			}
-			if (type != null && type.equals("request")) {
-				// add to the end of buffer
-				messagesToTransfer.add(m);
+
+			String type = (String) m.getProperty("type");
+
+			if (m.isResponse()) {
+				transferBuffer.add(0,m);
+			} else if (type.equals("request")) {
+				// request packets with higher priority will be placed at the front
+				int messagePriority = (int) m.getProperty("priority");
+				for (int i = transferBuffer.size()-1; i >= 0; i--) {
+					Integer listPriority = (Integer) transferBuffer.get(i).getProperty("priority");
+					if (listPriority == null) {
+						transferBuffer.add(i+1,m);
+						break;
+					} else if (listPriority >= messagePriority) {
+						transferBuffer.add(i+1,m);
+						break;
+					}
+				}
 			}
 		}
-		this.tryMessagesToConnections(messagesToTransfer, this.getConnections());
+
+		this.tryMessagesToConnections(transferBuffer, this.getConnections());
+	}
+
+	@Override
+	protected Message getNextMessageToRemove(boolean excludeMsgBeingSent) {
+		Collection<Message> messages = this.getMessageCollection();
+		Message oldest = null;
+		for (Message m : messages) {
+			if (excludeMsgBeingSent && isSending(m.getId())) {
+				continue; // skip the message(s) that router is sending
+			}
+			if (oldest == null) {
+				oldest = m;
+			} else if (oldest.getReceiveTime() > m.getReceiveTime()) {
+				oldest = m;
+			}
+		}
+		
+		return oldest;
 	}
 	
 	@Override
-	public ReqResRouter replicate() {
-		return new ReqResRouter(this);
+	public ICN_FIFO_Router replicate() {
+		return new ICN_FIFO_Router(this);
 	}
 
 }
