@@ -72,33 +72,15 @@ public class ICN_Nearest_Router extends ActiveRouter {
 		 * connection where it received the interest packets
 		 */
 		ArrayList<Message> transferBuffer = new ArrayList<Message>();
+		// ArrayList<Message> responseBuffer = new ArrayList<Message>();
 		for (Message m : this.getMessageCollection()) {
-			// add message to buffer if buffer is empty
-			if (transferBuffer.size() == 0) {
-				transferBuffer.add(m);
-				continue;
-			}
-
 			String type = (String) m.getProperty("type");
-
 			if (m.isResponse()) {
 				transferBuffer.add(0,m);
 			} else if (type.equals("request")) {
-				// request packets with higher priority will be placed at the front
-				int messagePriority = (int) m.getProperty("priority");
-				for (int i = transferBuffer.size()-1; i >= 0; i--) {
-					Integer listPriority = (Integer) transferBuffer.get(i).getProperty("priority");
-					if (listPriority == null) {
-						transferBuffer.add(i+1,m);
-						break;
-					} else if (listPriority >= messagePriority) {
-						transferBuffer.add(i+1,m);
-						break;
-					}
-				}
+				transferBuffer.add(m);
 			}
 		}
-
 		this.tryMessagesToConnections(transferBuffer, this.getConnections());
 	}
 

@@ -25,6 +25,8 @@ public class GeneratorApplication extends Application {
 	public static final String CONTENT_PROPORTION = "proportion";
 	/** Content generation interval */
 	public static final String CONTENT_INTERVAL = "interval";
+	/** Content range - inclusive lower, exclusive upper */
+	public static final String CONTENT_RANGE = "range";
 	/** Destination address range - inclusive lower, exclusive upper */
 	public static final String CONTENT_DEST_RANGE = "destinationRange";
 	/** Content size range - inclusive lower, exclusive upper */
@@ -38,6 +40,8 @@ public class GeneratorApplication extends Application {
     // Private vars
     private double			lastCreation = 0;
     private double			interval = 500;
+	private int				contentMin = 0;
+	private int				contentMax = 1;
 	private int				propMin = 0;
 	private int				propMax = 1;
 	private int				destMin = 0;
@@ -67,6 +71,11 @@ public class GeneratorApplication extends Application {
 		if (s.contains(CONTENT_TYPE)){
 			this.contentType = Arrays.asList(s.getSetting(CONTENT_TYPE).split("\\|"));
 		}
+		if (s.contains(CONTENT_RANGE)) {
+			int[] range = s.getCsvInts(CONTENT_RANGE,2);
+			this.contentMin = range[0];
+			this.contentMax = range[1];
+		}
 		if (s.contains(CONTENT_SIZE_RANGE)) {
 			int[] size = s.getCsvInts(CONTENT_SIZE_RANGE,2);
 			this.sizeMin = size[0];
@@ -93,6 +102,8 @@ public class GeneratorApplication extends Application {
 		this.propMax = a.getPropMax();
 		this.interval = a.getInterval();
 		this.passive = a.isPassive();
+		this.contentMax = a.getContentMax();
+		this.contentMin = a.getContentMin();
 		this.destMax = a.getDestMax();
 		this.destMin = a.getDestMin();
 		this.sizeMax = a.getSizeMax();
@@ -125,6 +136,15 @@ public class GeneratorApplication extends Application {
 		return randomInt;
 	}
 
+	public String randomContent() {
+		int randomInt = 0;
+		Random rng = new Random();
+		if (contentMax == contentMin) randomInt = contentMin;
+		randomInt = contentMin + rng.nextInt(contentMax - contentMin);
+
+		return "M" + randomInt;
+	}
+
 	public int randomDestination() {
 		int randomInt = 0;
 		Random rng = new Random();
@@ -151,7 +171,8 @@ public class GeneratorApplication extends Application {
 		if (this.passive) return;
 		double curTime = SimClock.getTime();
 		if (curTime - this.lastCreation >= this.interval && hostActive(host)) {
-			Message m = new Message(host, null, getId(host), randomSize());
+			// Message m = new Message(host, null, getId(host), randomSize());
+			Message m = new Message(host, null, randomContent(), randomSize());
 			m.addProperty("type", "data");
 
 			// declare random destinations and target packets for interest packets
@@ -191,6 +212,14 @@ public class GeneratorApplication extends Application {
 	 */
 	public boolean isPassive() { return passive; }
 	public void setPassive(boolean passive) { this.passive = passive; }
+
+	/**
+	 * contentMin and contentMax
+	 */
+	public int getContentMin() { return contentMin; }
+	public void setContentMin(int contentMin) { this.contentMin = contentMin; }
+	public int getContentMax() { return contentMax; }
+	public void setContentMax(int contentMax) { this.contentMax = contentMax; }
 
 	/**
 	 * destMin and destMax

@@ -24,6 +24,8 @@ public class RequestApplication extends Application {
 	public static final String REQUEST_PROPORTION = "proportion";
 	/** Destination address range - inclusive lower, exclusive upper */
 	public static final String REQUEST_DEST_RANGE = "destinationRange";
+	/** Target range - inclusive lower, exclusive upper */
+	public static final String TARGET_RANGE = "targetRange";
 	/** Priority range - inclusive lower, exclusive upper */
 	public static final String REQUEST_PRIORITY_RANGE = "priorityRange";
     /** Size of the request message */
@@ -39,8 +41,10 @@ public class RequestApplication extends Application {
 	private int		propMax = 1;
 	private int		destMin = 0;
 	private int		destMax = 1;
-	private int		priorMin = 1;
-	private int		priorMax = 2;
+	private int		targetMin = 0;
+	private int		targetMax = 1;
+	private int		priorMin = 0;
+	private int		priorMax = 1;
     private boolean passive = false;
     private int		requestSize = 1;
 
@@ -65,6 +69,11 @@ public class RequestApplication extends Application {
 			int[] destination = s.getCsvInts(REQUEST_DEST_RANGE,2);
 			this.destMin = destination[0];
 			this.destMax = destination[1];
+		}
+		if (s.contains(TARGET_RANGE)){
+			int[] target = s.getCsvInts(TARGET_RANGE,2);
+			this.targetMin = target[0];
+			this.targetMax = target[1];
 		}
 		if (s.contains(REQUEST_PRIORITY_RANGE)){
 			int[] priority = s.getCsvInts(REQUEST_PRIORITY_RANGE,2);
@@ -92,6 +101,8 @@ public class RequestApplication extends Application {
 		this.passive = a.isPassive();
 		this.destMax = a.getDestMax();
 		this.destMin = a.getDestMin();
+		this.targetMax = a.getTargetMax();
+		this.targetMin = a.getTargetMin();
 		this.priorMax = a.getPriorMax();
 		this.priorMin = a.getPriorMin();
 		this.requestSize = a.getRequestSize();
@@ -122,6 +133,15 @@ public class RequestApplication extends Application {
 		return randomInt;
 	}
 
+	public String randomTarget() {
+		int randomInt = 0;
+		Random rng = new Random();
+		if (targetMax == targetMin) randomInt = targetMin;
+		randomInt = targetMin + rng.nextInt(targetMax - targetMin);
+
+		return "M" + randomInt;
+	}
+
 	public int randomPriority() {
 		int randomInt = 0;
 		Random rng = new Random();
@@ -135,7 +155,8 @@ public class RequestApplication extends Application {
 	 * Checks if host has application to actively request packets
 	 */
 	public boolean hostActive(DTNHost host) {
-		return (host.getAddress() < getPropMax() && host.getAddress() >= getPropMin());
+		return (host.getAddress() < getPropMax() &&
+				host.getAddress() >= getPropMin());
 	}
 
     /** 
@@ -155,10 +176,13 @@ public class RequestApplication extends Application {
 			DTNHost randDest = SimScenario.getInstance().getWorld().getNodeByAddress(randomInteger());
 			m.setTo(randDest);
 			// declare random target packet
-			m.addProperty("target", "M" + randomInteger());
+			m.addProperty("target", randomTarget());
 			// declare random priority level
 			m.addProperty("priority", randomPriority());
 			host.createNewMessage(m);
+
+			// set location of data creation
+			m.addProperty("initiallocation", host.getLocation());
 			
 			// Call listeners
 			super.sendEventToListeners("SentRequest", null, host);
@@ -200,6 +224,14 @@ public class RequestApplication extends Application {
 	public void setDestMin(int destMin) { this.destMin = destMin; }
 	public int getDestMax() { return destMax; }
 	public void setDestMax(int destMax) { this.destMax = destMax; }
+
+	/**
+	 * targetMin and TargetMax
+	 */
+	public int getTargetMin() { return targetMin; }
+	public void setTargetMin(int targetMin) { this.targetMin = targetMin; }
+	public int getTargetMax() { return targetMax; }
+	public void setTargetMax(int targetMax) { this.targetMax = targetMax; }
 
 	/**
 	 * priorMin and priorMax

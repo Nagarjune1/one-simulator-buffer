@@ -65,7 +65,7 @@ GUI.EventLogPanel.nrofEvents = 100
 # This configuration file adds Generator application for all the nodes
 generatorApp.type = GeneratorApplication
 generatorApp.proportion = 0,10
-generatorApp.interval = 700
+generatorApp.interval = 800
 generatorApp.destinationRange = 0,29
 generatorApp.sizeRange = 10,100
 generatorApp.passive = false

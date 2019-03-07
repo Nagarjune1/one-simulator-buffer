@@ -1,8 +1,0 @@
-=========== response rate ==========
-average = 3.1850047%
-matched = 3.276612%
-=========== efficiency ==========
-Excess: 382.0
-Total: 392.0
-Efficiency (%): 2.551
-
